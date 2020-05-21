@@ -49,15 +49,15 @@ class EyeContactOnline {
     private val fpsFormat = DecimalFormat("#.##")
     private val updateDelay = 20
 
-    private val frame = JFrame(frameTitleSourceSelection)
-    private val duplicationPanel = DuplicationPanel()
-    private val screenRobot = Robot()
-
     private var sourceSelectionMode = true
     private var sourceRectangle = Rectangle(1920 / 2, 900, 600, 200)
     private var destinationRectangle = Rectangle(800, 600, 400, 280)
     private var scale = 1.0
     private var showFramesPerSecond = false
+
+    private val frame = JFrame(frameTitleSourceSelection)
+    private val duplicationPanel = DuplicationPanel()
+    private val screenRobot = Robot()
 
     fun launchApplication() {
         frame.bounds = sourceRectangle
