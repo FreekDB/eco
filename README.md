@@ -12,4 +12,4 @@ You can download eco as a jar file (see the releases page) and run it with Java 
 Besides being an abbreviation of eye contact online, the name eco also was inspired by the [definition of ecology on Wikipedia](https://en.wikipedia.org/wiki/Ecology), since we are all interacting organisms in a challenging environment:
 > "Ecology is a branch of biology concerning interactions among organisms and their biophysical environment [...]"
 
-Technology: Kotlin, JVM and java.awt.Robot.
+Technology: [Kotlin](https://kotlinlang.org/), [JVM](https://en.wikipedia.org/wiki/Java_virtual_machine), [Swing](https://en.wikipedia.org/wiki/Swing_(Java)) and [java.awt.Robot](https://docs.oracle.com/javase/8/docs/api/java/awt/Robot.html).
