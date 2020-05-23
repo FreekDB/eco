@@ -111,7 +111,7 @@ class EyeContactOnline {
 
             registerKeyAction(KeyEvent.VK_S, "select source") { selectSourceMode() }
             registerKeyAction(KeyEvent.VK_D, "select destination") { selectDestinationMode() }
-            registerKeyAction(KeyEvent.VK_EQUALS, "zoom in", keyModifiers = ctrlModifier) { zoomIn() }
+            registerKeyAction(KeyEvent.VK_EQUALS, "zoom in ctrl-=", keyModifiers = ctrlModifier) { zoomIn() }
             registerKeyAction(KeyEvent.VK_ADD, "zoom in keypad", keyModifiers = ctrlModifier) { zoomIn() }
             registerKeyAction(KeyEvent.VK_MINUS, "zoom out", keyModifiers = ctrlModifier) { zoomOut() }
             registerKeyAction(KeyEvent.VK_SUBTRACT, "zoom out keypad", keyModifiers = ctrlModifier) { zoomOut() }
