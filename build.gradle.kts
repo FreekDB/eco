@@ -1,6 +1,7 @@
 group = "com.github.freekdb.eco"
 version = "0.0.6-SNAPSHOT"
 
+// Run "./gradlew uberJar" to build a new jar with eco.
 tasks.register<Jar>("uberJar") {
     archiveClassifier.set("uber")
 

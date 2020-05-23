@@ -3,8 +3,10 @@ package com.github.freekdb.eco
 import java.awt.BorderLayout
 import java.awt.Dimension
 import java.awt.Graphics
+import java.awt.Point
 import java.awt.Rectangle
 import java.awt.Robot
+import java.awt.Toolkit
 import java.awt.event.ActionEvent
 import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
@@ -24,7 +26,6 @@ import kotlin.system.exitProcess
 
 /*
 In progress:
-- Position destination centered at top of the screen initially (x == y == -1).
 - Resize source when resizing destination. What happens when you move the top left corner: move the source area too?
 - Resize destination when zooming in or out.
 
@@ -40,6 +41,7 @@ Done:
   + Select the destination area and start duplicating those pixels.
 ✓ Monitor update frequency (not necessary: cpu usage).
 ✓ Add scaling with keyboard shortcuts Ctrl-plus and Ctrl-minus.
+✓ Position destination area centered at top of the screen initially.
 */
 
 fun main() {
@@ -51,13 +53,15 @@ class EyeContactOnline {
     private val frameTitleSourceSelection = "$frameBaseTitle: select source area and press \"D\""
     private val fpsFormat = DecimalFormat("#.##")
     private val updateDelay = 20
+    private val screenWidth = Toolkit.getDefaultToolkit().screenSize.width
     private val zoomLevels = listOf(0.25, 0.33, 0.5, 0.67, 0.8, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0)
 
-    private var sourceSelectionMode = true
-    private var sourceRectangle = Rectangle(1920 / 2, 900, 600, 200)
-    private var destinationRectangle = Rectangle(800, 600, 400, 280)
     private var zoomLevel = 1.0
     private var showFramesPerSecond = false
+    private var sourceSelectionMode = true
+    private var sourceRectangle = Rectangle(screenWidth / 2, 900, 600, 200)
+    private var destinationRectangle = Rectangle(Point((screenWidth - sourceRectangle.width) / 2, 0),
+                                                 destinationSizeFromSource())
 
     private val frame = JFrame(frameTitleSourceSelection)
     private val duplicationPanel = DuplicationPanel()
@@ -84,7 +88,11 @@ class EyeContactOnline {
         duplicationWorker.execute()
     }
 
-    fun updateDuplicatedPixels() {
+    private fun destinationSizeFromSource(): Dimension =
+        Dimension((sourceRectangle.width * zoomLevel).toInt() + 10,
+                  (sourceRectangle.height * zoomLevel).toInt() + 32)
+
+    private fun updateDuplicatedPixels() {
         frame.repaint()
 
         if (!sourceSelectionMode) {
@@ -179,8 +187,7 @@ class EyeContactOnline {
 
         private fun selectDestinationMode() {
             sourceRectangle = frame.bounds
-            destinationRectangle.width = (sourceRectangle.width * zoomLevel).toInt() + 10
-            destinationRectangle.height = (sourceRectangle.height * zoomLevel).toInt() + 32
+            destinationRectangle.size = destinationSizeFromSource()
             frame.bounds = destinationRectangle
 
             sourceSelectionMode = false
