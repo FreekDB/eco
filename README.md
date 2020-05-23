@@ -7,7 +7,7 @@ Below a screenshot showing eco in action:
 
 ![Screenshot showing eco in action](/documentation/screenshot-eco-in-action.png?raw=true "Screenshot showing eco in action")
 
-Currently, there is no easy way to install eco, but I'm open to ideas on how we can improve this.
+You can download eco as a jar file (see the releases page) and run it with Java 8 (or newer).
 
 Besides being an abbreviation of eye contact online, the name eco also was inspired by the [definition of ecology on Wikipedia](https://en.wikipedia.org/wiki/Ecology), since we are all interacting organisms in a challenging environment:
 > "Ecology is a branch of biology concerning interactions among organisms and their biophysical environment [...]"
