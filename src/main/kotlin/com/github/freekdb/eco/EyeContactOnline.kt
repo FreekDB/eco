@@ -6,6 +6,7 @@ import java.awt.Graphics
 import java.awt.Rectangle
 import java.awt.Robot
 import java.awt.event.ActionEvent
+import java.awt.event.InputEvent
 import java.awt.event.KeyEvent
 import java.awt.geom.AffineTransform
 import java.awt.image.AffineTransformOp
@@ -23,8 +24,9 @@ import kotlin.system.exitProcess
 
 /*
 In progress:
-- Add scaling!
-  => Shortcuts Ctrl-plus and Ctrl-minus.
+- Position destination centered at top of the screen initially (x == y == -1).
+- Resize source when resizing destination. What happens when you move the top left corner: move the source area too?
+- Resize destination when zooming in or out.
 
 Improvements:
 - Transparent window while selecting source?
@@ -37,6 +39,7 @@ Done:
   + Select the source area.
   + Select the destination area and start duplicating those pixels.
 ✓ Monitor update frequency (not necessary: cpu usage).
+✓ Add scaling with keyboard shortcuts Ctrl-plus and Ctrl-minus.
 */
 
 fun main() {
@@ -48,11 +51,12 @@ class EyeContactOnline {
     private val frameTitleSourceSelection = "$frameBaseTitle: select source area and press \"D\""
     private val fpsFormat = DecimalFormat("#.##")
     private val updateDelay = 20
+    private val zoomLevels = listOf(0.25, 0.33, 0.5, 0.67, 0.8, 1.0, 1.25, 1.5, 2.0, 3.0, 4.0)
 
     private var sourceSelectionMode = true
     private var sourceRectangle = Rectangle(1920 / 2, 900, 600, 200)
     private var destinationRectangle = Rectangle(800, 600, 400, 280)
-    private var scale = 1.0
+    private var zoomLevel = 1.0
     private var showFramesPerSecond = false
 
     private val frame = JFrame(frameTitleSourceSelection)
@@ -85,7 +89,8 @@ class EyeContactOnline {
 
         if (!sourceSelectionMode) {
             if (showFramesPerSecond) {
-                frame.title = "$frameBaseTitle (fps: ${fpsFormat.format(duplicationPanel.framesPerSecond)}) ${duplicationPanel.frameCounter}"
+                frame.title = "$frameBaseTitle (fps: ${fpsFormat.format(duplicationPanel.framesPerSecond)}) " +
+                              "${duplicationPanel.frameCounter}"
             } else {
                 // It seems that updating the frame title helps the application to run smoothly?!?
                 frame.title = frameBaseTitle
@@ -97,13 +102,19 @@ class EyeContactOnline {
         internal var frameCounter = 0
         internal var framesPerSecond = 0.0
         private var previousTimeMilliseconds = 0L
-        private var previousFrameCounter =  0
+        private var previousFrameCounter = 0
 
         init {
             preferredSize = Dimension(sourceRectangle.width, sourceRectangle.height)
 
+            val ctrlModifier = InputEvent.CTRL_DOWN_MASK
+
             registerKeyAction(KeyEvent.VK_S, "select source") { selectSourceMode() }
             registerKeyAction(KeyEvent.VK_D, "select destination") { selectDestinationMode() }
+            registerKeyAction(KeyEvent.VK_EQUALS, "zoom in", keyModifiers = ctrlModifier) { zoomIn() }
+            registerKeyAction(KeyEvent.VK_ADD, "zoom in keypad", keyModifiers = ctrlModifier) { zoomIn() }
+            registerKeyAction(KeyEvent.VK_MINUS, "zoom out", keyModifiers = ctrlModifier) { zoomOut() }
+            registerKeyAction(KeyEvent.VK_SUBTRACT, "zoom out keypad", keyModifiers = ctrlModifier) { zoomOut() }
             registerKeyAction(KeyEvent.VK_F, "show fps") { toggleFramesPerSecond() }
             registerKeyAction(KeyEvent.VK_ESCAPE, "escape") { handleEscape() }
         }
@@ -114,23 +125,23 @@ class EyeContactOnline {
             if (!sourceSelectionMode) {
                 val sourceCapture = screenRobot.createScreenCapture(sourceRectangle)
 
-                if (abs(scale - 1.0) > 0.1) {
-                    // Scale image...
-                    val w = sourceCapture.width
-                    val h = sourceCapture.height
-                    var scaledCapture = BufferedImage(w, h, BufferedImage.TYPE_INT_ARGB)
-                    val at = AffineTransform()
-                    at.scale(scale, scale)
-                    val scaleOp = AffineTransformOp(at, AffineTransformOp.TYPE_BILINEAR)
-                    scaledCapture = scaleOp.filter(sourceCapture, scaledCapture)
-                    // Scale image...
-
-                    graphics.drawImage(scaledCapture, 0, 0, null)
-                } else {
-                    graphics.drawImage(sourceCapture, 0, 0, null)
-                }
+                graphics.drawImage(scaleImage(sourceCapture), 0, 0, null)
 
                 updateCounters()
+            }
+        }
+
+        private fun scaleImage(sourceImage: BufferedImage): BufferedImage {
+            val zoomActive = abs(zoomLevel - 1.0) >= 0.1
+
+            return if (zoomActive) {
+                val transform = AffineTransform.getScaleInstance(zoomLevel, zoomLevel)
+                val scaleOperation = AffineTransformOp(transform, AffineTransformOp.TYPE_BILINEAR)
+                val newImage = BufferedImage(sourceImage.width, sourceImage.height, BufferedImage.TYPE_INT_ARGB)
+
+                scaleOperation.filter(sourceImage, newImage)
+            } else {
+                sourceImage
             }
         }
 
@@ -168,12 +179,26 @@ class EyeContactOnline {
 
         private fun selectDestinationMode() {
             sourceRectangle = frame.bounds
-            destinationRectangle.width = (sourceRectangle.width * scale).toInt() + 10
-            destinationRectangle.height = (sourceRectangle.height * scale).toInt() + 32
+            destinationRectangle.width = (sourceRectangle.width * zoomLevel).toInt() + 10
+            destinationRectangle.height = (sourceRectangle.height * zoomLevel).toInt() + 32
             frame.bounds = destinationRectangle
 
             sourceSelectionMode = false
             frame.title = frameBaseTitle
+        }
+
+        private fun zoomIn() {
+            zoom(1)
+        }
+
+        private fun zoomOut() {
+            zoom(-1)
+        }
+
+        private fun zoom(step: Int) {
+            if (zoomLevels.contains(zoomLevel)) {
+                zoomLevel = zoomLevels[(zoomLevels.indexOf(zoomLevel) + step).coerceIn(zoomLevels.indices)]
+            }
         }
 
         private fun toggleFramesPerSecond() {
